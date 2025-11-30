@@ -370,36 +370,17 @@
   <!-- 顶部状态提示 -->
   <div class="toast-message" id="toast"></div>
 
-  <!-- Firebase + 逻辑 -->
-  <script type="module">
-    /************ 1）初始化 Firebase（沿用你岩石系统的写法） ************/
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
-    import {
-      getFirestore, collection, addDoc, serverTimestamp,
-      query, orderBy, onSnapshot, getDocs, deleteDoc, doc,
-      enableIndexedDbPersistence
-    } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+   <script type="module">
+    /************ 1）初始化 Supabase（复用你之前的项目） ************/
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-    // TODO：把这里替换成你自己 Firebase 控制台里的配置（跟岩石系统那份一样）
-    const firebaseConfig = {
-      apiKey: "YOUR_API_KEY",
-      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-      projectId: "YOUR_PROJECT_ID",
-      storageBucket: "YOUR_PROJECT_ID.appspot.com",
-      messagingSenderId: "YOUR_SENDER_ID",
-      appId: "YOUR_APP_ID"
-    };
+    // TODO：把下面两个替换成你自己项目的配置
+  const SUPABASE_URL = "https://fdgprrtllwycykgulbnz.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkZ3BycnRsbHd5Y3lrZ3VsYm56Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1Mjg4MDksImV4cCI6MjA3ODEwNDgwOX0.tWyXbTgj9XnKcFqo9qmKw-u6WRTJoGBCkDswi3ZwBRU";
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
 
-    // 可选：离线缓存
-    enableIndexedDbPersistence(db).catch(err=>{
-      console.warn("IndexedDB 持久化不可用：", err?.code || err);
-    });
-
-    // 食物链集合
-    const colRef = collection(db, "foodchains");
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const TABLE_NAME = "foodchains";
 
     /************ 2）UI：标签切换 ************/
     document.querySelectorAll('.tab').forEach(tab=>{
@@ -574,6 +555,7 @@
       }
     }
 
+    /************ 4）学生端：提交到 Supabase 表 foodchains ************/
     submitBtn.addEventListener("click", async ()=>{
       // 已经提交过
       if(hasSubmitted){
@@ -592,13 +574,12 @@
         return;
       }
 
-      const now = new Date();
+      const nowMs = Date.now();
       const record = {
-        chainArray: seq,
-        chainStr: seq.join("→"),
-        date: now.toLocaleDateString('zh-CN'),
-        timestamp: serverTimestamp(),
-        createdAt: serverTimestamp()
+        chain_array: seq,
+        chain_str: seq.join("→"),
+        date: new Date(nowMs).toLocaleDateString('zh-CN'),
+        timestamp: nowMs
       };
 
       // 点击后立刻给孩子反馈 & 锁按钮（防连点）
@@ -608,26 +589,27 @@
       submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 正在提交…';
       showToast("正在提交到老师的大屏，请稍等～");
 
-      try{
-        await addDoc(colRef, record);
-        if(seq.length < 3 || seq.length > 5){
-          showToast("提交成功！下次可以试试 3～5 个生物的食物链～");
-        }else{
-          showToast("提交成功！本组不能再修改了。");
-        }
-        lockThisClient();
-      }catch(err){
-        console.error("提交失败：", err);
+      const { error } = await supabase.from(TABLE_NAME).insert(record);
+
+      if(error){
+        console.error("提交失败：", error);
         showToast("提交失败，请检查网络或让老师帮忙～","error");
-        // 提交失败要恢复按钮
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalHTML;
-      }finally{
         isSubmitting = false;
+        return;
       }
+
+      if(seq.length < 3 || seq.length > 5){
+        showToast("提交成功！下次可以试试 3～5 个生物的食物链～");
+      }else{
+        showToast("提交成功！本组不能再修改了。");
+      }
+      lockThisClient();
+      isSubmitting = false;
     });
 
-    /************ 4）教师端：实时订阅 + 统计汇总 ************/
+    /************ 5）教师端：统计与汇总（从 Supabase 拉数据） ************/
     const summaryListEl = document.getElementById("summaryList");
     const noDataTipEl = document.getElementById("noDataTip");
     const totalSubmissionsEl = document.getElementById("total-submissions");
@@ -636,12 +618,10 @@
     const refreshBtn = document.getElementById("refresh-btn");
     const clearBtnTeacher = document.getElementById("clear-btn");
 
-    const q = query(colRef, orderBy('timestamp','desc'));
-
     function computeSummary(records){
       const counter = {};
       records.forEach(r=>{
-        const key = r.chainStr || (Array.isArray(r.chainArray) ? r.chainArray.join("→") : "");
+        const key = r.chain_str || (Array.isArray(r.chain_array) ? r.chain_array.join("→") : "");
         if(!key) return;
         if(!counter[key]) counter[key] = 0;
         counter[key] += 1;
@@ -677,57 +657,61 @@
       });
     }
 
-    // 实时订阅
-    onSnapshot(q, snapshot=>{
-      const records = snapshot.docs.map(d=>{
-        const data = d.data();
-        const t = data.timestamp?.toMillis ? data.timestamp.toMillis() : 0;
-        return { id:d.id, ...data, timestamp:t };
-      });
-      renderSummaryFromRecords(records);
-    }, err=>{
-      console.error("实时订阅失败：", err);
-      showToast("教师端实时数据订阅失败，可尝试点击刷新按钮","error");
-    });
+    // 从 Supabase 拉一遍数据并渲染
+    async function fetchAndRender(){
+      const { data, error } = await supabase
+        .from(TABLE_NAME)
+        .select('*')
+        .order('timestamp', { ascending: false });
 
-    // 手动刷新
-    refreshBtn.addEventListener("click", async ()=>{
-      try{
-        const snap = await getDocs(q);
-        const records = snap.docs.map(d=>{
-          const data = d.data();
-          const t = data.timestamp?.toMillis ? data.timestamp.toMillis() : 0;
-          return { id:d.id, ...data, timestamp:t };
-        });
-        renderSummaryFromRecords(records);
-        showToast("数据已刷新！");
-      }catch(err){
-        console.error("刷新失败：", err);
-        showToast("刷新失败，请稍后再试","error");
+      if(error){
+        console.error("加载数据失败：", error);
+        showToast("教师端加载数据失败，请稍后重试","error");
+        return;
       }
+      renderSummaryFromRecords(data || []);
+    }
+
+    // 实时订阅：foodchains 表有变化就自动刷新
+    const channel = supabase
+      .channel('foodchains-change')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: TABLE_NAME },
+        () => { fetchAndRender(); }
+      )
+      .subscribe();
+
+    // 手动刷新按钮
+    refreshBtn.addEventListener("click", async ()=>{
+      await fetchAndRender();
+      showToast("数据已刷新！");
     });
 
     // 清空数据（老师用）
     clearBtnTeacher.addEventListener("click", async ()=>{
       if(!confirm("确定要清空所有食物链记录吗？此操作不可恢复！")) return;
       showToast("正在清空数据...");
-      try{
-        const snap = await getDocs(colRef);
-        await Promise.all(
-          snap.docs.map(docSnap => deleteDoc(doc(db, "foodchains", docSnap.id)))
-        );
-        showToast("所有记录已清空！");
-      }catch(err){
-        console.error("清空失败：", err);
+      const { error } = await supabase
+        .from(TABLE_NAME)
+        .delete()
+        .neq('id', '00000000-0000-0000-0000-000000000000'); // 条件只是为了满足 Supabase 必须有过滤条件的限制
+
+      if(error){
+        console.error("清空失败：", error);
         showToast("清空失败，请稍后重试","error");
+        return;
       }
+      await fetchAndRender();
+      showToast("所有记录已清空！");
     });
 
-    /************ 5）启动：初始化前端 ************/
+    /************ 6）启动：初始化前端 ************/
     initPalette();
     initCanvasDragDrop();
     updateCanvasEmptyState();
     updateCurrentChainDisplay();
+    fetchAndRender();  // 老师端初次进入时拉一次数据
   </script>
 </body>
 </html>
