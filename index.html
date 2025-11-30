@@ -129,7 +129,7 @@
       align-items:center
     }
     .canvas.empty::before{
-      content:"把小动物和箭头拖到这里，拼成一条“谁吃谁”的食物链";
+      content:"把小动物和箭头拖到这里，或点击上面的模块添加，拼成一条“谁吃谁”的食物链";
       color:#9ca3af;
       font-size:0.95rem
     }
@@ -275,7 +275,7 @@
   <div class="container">
     <header>
       <h1><i class="fas fa-paw"></i> 食物链观察记录系统</h1>
-      <p class="subtitle">拖一拖、连一连，看看大家拼出了哪些“谁吃谁”的食物链</p>
+      <p class="subtitle">拖一拖、点一点，看看大家拼出了哪些“谁吃谁”的食物链</p>
     </header>
 
     <div class="tab-container">
@@ -288,7 +288,7 @@
       <div class="student-form">
         <h2 class="form-title"><i class="fas fa-seedling"></i> 拼一拼：谁吃谁？</h2>
         <div class="instruction">
-          请从下面选择小动物和箭头，拖到黄色区域，拼出一条完整的食物链，然后点击“提交给老师”。
+          电脑上可以拖动模块，手机 / 平板上点击模块即可添加到下面的黄色区域，拼出一条完整的食物链，再点击“提交给老师”。
         </div>
 
         <!-- 模块库 -->
@@ -314,7 +314,10 @@
           你当前的食物链：<span class="value" id="currentChain">（还没有哦）</span>
         </div>
         <div class="tip">
-          建议：一条食物链一般有 3～4 个生物，最多不超过 5 个。          
+          建议：一条食物链一般有 3～4 个生物，最多不超过 5 个。
+        </div>
+        <div class="tip" id="submitHint">
+          状态：还未提交。
         </div>
       </div>
     </div>
@@ -408,7 +411,7 @@
       });
     });
 
-    /************ 3）学生端：拖拽模块初始化 ************/
+    /************ 3）学生端：拖拽 / 点击 模块初始化 ************/
     const speciesList = [
       "🌳树木","🐺狼","🦌鹿","🐍蛇","🌱青草","🐛虫子","🐸青蛙","🐰兔子","🦅老鹰"
     ];
@@ -417,27 +420,30 @@
     const paletteEl = document.getElementById("palette");
     const canvasEl = document.getElementById("canvas");
     const currentChainEl = document.getElementById("currentChain");
+    const submitHintEl = document.getElementById("submitHint");
 
     const undoBtn = document.getElementById("undoBtn");
     const clearBtn = document.getElementById("clearBtn");
     const submitBtn = document.getElementById("submitBtn");
     const toastEl = document.getElementById("toast");
 
-    let hasSubmitted = false; // 本机一次提交锁定
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
+    let hasSubmitted = false;   // 本机一次提交锁定
+    let isSubmitting = false;   // 正在提交中，防止连点
 
     function showToast(msg, type="success"){
       toastEl.textContent = msg;
       toastEl.classList.remove("error");
       if(type==="error") toastEl.classList.add("error");
       toastEl.classList.add("show");
-      setTimeout(()=>toastEl.classList.remove("show"), 1600);
+      setTimeout(()=>toastEl.classList.remove("show"), 1800);
     }
 
     function createPaletteBlock(label, type){
       const div = document.createElement("div");
       div.className = `block ${type}`;
       div.textContent = label;
-      div.draggable = true;
       div.dataset.type = type;
 
       if(type === "species"){
@@ -447,14 +453,25 @@
         div.dataset.value = label;
       }
 
-      div.addEventListener("dragstart", e=>{
-        const payload = {
-          type,
-          value: div.dataset.value,
-          label
-        };
-        e.dataTransfer.setData("text/plain", JSON.stringify(payload));
-      });
+      // PC：使用原生拖拽
+      if (!isTouchDevice) {
+        div.draggable = true;
+        div.addEventListener("dragstart", e=>{
+          const payload = {
+            type,
+            value: div.dataset.value,
+            label
+          };
+          e.dataTransfer.setData("text/plain", JSON.stringify(payload));
+        });
+      }
+
+      // 手机 / 平板：点击直接添加到画布
+      if (isTouchDevice) {
+        div.addEventListener("click", ()=>{
+          addBlockToCanvas(type, div.dataset.value, label);
+        });
+      }
 
       return div;
     }
@@ -466,6 +483,17 @@
       div.dataset.type = type;
       div.dataset.value = value;
       return div;
+    }
+
+    function addBlockToCanvas(type, value, label){
+      if(hasSubmitted){
+        showToast("已经提交过啦，不能再修改了。","error");
+        return;
+      }
+      const node = createCanvasBlock(type, value, label);
+      canvasEl.appendChild(node);
+      updateCanvasEmptyState();
+      updateCurrentChainDisplay();
     }
 
     function updateCanvasEmptyState(){
@@ -508,18 +536,11 @@
       canvasEl.addEventListener("dragover", e=>e.preventDefault());
       canvasEl.addEventListener("drop", e=>{
         e.preventDefault();
-        if(hasSubmitted){
-          showToast("已经提交过啦，不能再修改了。","error");
-          return;
-        }
         const text = e.dataTransfer.getData("text/plain");
         if(!text) return;
         let payload;
         try{ payload = JSON.parse(text); }catch{ return; }
-        const node = createCanvasBlock(payload.type, payload.value, payload.label);
-        canvasEl.appendChild(node);
-        updateCanvasEmptyState();
-        updateCurrentChainDisplay();
+        addBlockToCanvas(payload.type, payload.value, payload.label);
       });
     }
 
@@ -546,13 +567,25 @@
       clearBtn.disabled = true;
       paletteEl.classList.add("locked");
       canvasEl.classList.add("locked");
+      if (submitHintEl) {
+        submitHintEl.textContent = "状态：已提交成功，请等待老师展示全班结果。";
+        submitHintEl.style.color = "#16a34a";
+        submitHintEl.style.fontWeight = "bold";
+      }
     }
 
     submitBtn.addEventListener("click", async ()=>{
+      // 已经提交过
       if(hasSubmitted){
         showToast("已经提交过啦，等老师一起看结果吧！","error");
         return;
       }
+      // 正在提交中
+      if(isSubmitting){
+        showToast("正在提交中，请稍等哦～");
+        return;
+      }
+
       const seq = parseCanvasSpeciesSequence();
       if(seq.length < 2){
         showToast("至少要有两个生物才能算一条食物链哦～","error");
@@ -568,10 +601,17 @@
         createdAt: serverTimestamp()
       };
 
+      // 点击后立刻给孩子反馈 & 锁按钮（防连点）
+      isSubmitting = true;
+      const originalHTML = submitBtn.innerHTML;
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 正在提交…';
+      showToast("正在提交到老师的大屏，请稍等～");
+
       try{
         await addDoc(colRef, record);
         if(seq.length < 3 || seq.length > 5){
-          showToast("已提交：下次可以试试 3～5 个生物的食物链～");
+          showToast("提交成功！下次可以试试 3～5 个生物的食物链～");
         }else{
           showToast("提交成功！本组不能再修改了。");
         }
@@ -579,6 +619,11 @@
       }catch(err){
         console.error("提交失败：", err);
         showToast("提交失败，请检查网络或让老师帮忙～","error");
+        // 提交失败要恢复按钮
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalHTML;
+      }finally{
+        isSubmitting = false;
       }
     });
 
