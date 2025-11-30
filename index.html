@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>小小生态学家：食物链观察记录系统（云端实时版）</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Arial Rounded MT Bold','Segoe UI','Microsoft YaHei',sans-serif}
+    :root{
+      --primary:#4a6fa5;
+      --secondary:#6bbf59;
+      --accent:#ff9e4a;
+      --light:#f5f7fa;
+      --dark:#2c3e50;
+      --shadow:0 4px 6px rgba(0,0,0,.1)
+    }
+    body{
+      background:linear-gradient(135deg,#e0f7fa 0%,#bbdefb 100%);
+      color:var(--dark);
+      min-height:100vh;
+      padding:20px
+    }
+    .container{max-width:1200px;margin:0 auto}
+    header{
+      text-align:center;
+      margin-bottom:30px;
+      padding:20px;
+      background:#fff;
+      border-radius:15px;
+      box-shadow:var(--shadow)
+    }
+    h1{color:var(--primary);margin-bottom:10px;font-size:2.2rem}
+    .subtitle{color:var(--dark);font-size:1.1rem}
+
+    .tab-container{display:flex;justify-content:center;margin-bottom:30px}
+    .tab{
+      padding:12px 26px;
+      background:#fff;
+      border:none;
+      border-radius:10px 10px 0 0;
+      font-size:1.1rem;
+      font-weight:bold;
+      cursor:pointer;
+      transition:.3s;
+      box-shadow:var(--shadow);
+      margin:0 5px
+    }
+    .tab.active{background:var(--primary);color:#fff}
+    .tab-content{
+      display:none;
+      background:#fff;
+      border-radius:15px;
+      padding:24px;
+      box-shadow:var(--shadow);
+      min-height:480px
+    }
+    .tab-content.active{display:block}
+
+    .form-title{
+      color:var(--primary);
+      margin-bottom:10px;
+      display:flex;
+      align-items:center;
+      font-size:1.3rem
+    }
+    .form-title i{margin-right:10px;font-size:1.5rem}
+    .instruction{
+      text-align:center;
+      margin-bottom:20px;
+      font-size:1.05rem;
+      color:var(--dark);
+      background:var(--light);
+      padding:12px;
+      border-radius:10px
+    }
+
+    /* 拖拽模块区 */
+    .palette{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-bottom:14px;
+      padding:10px;
+      background:#e3f2fd;
+      border-radius:12px;
+      border:2px dashed #bbdefb
+    }
+    .palette.locked,
+    .canvas.locked{
+      pointer-events:none;
+      opacity:.5
+    }
+    .block{
+      padding:8px 12px;
+      border-radius:999px;
+      background:#fff;
+      border:1px solid #d1d5db;
+      box-shadow:var(--shadow);
+      cursor:grab;
+      user-select:none;
+      font-size:0.95rem;
+      display:inline-flex;
+      align-items:center;
+      gap:4px;
+      white-space:nowrap
+    }
+    .block.species{
+      background:#fef9c3;
+      border-color:#facc15;
+      font-weight:500
+    }
+    .block.arrow{
+      background:#e0f2fe;
+      border-color:#38bdf8;
+      font-weight:700
+    }
+
+    .canvas{
+      margin-top:8px;
+      min-height:80px;
+      padding:12px;
+      border-radius:12px;
+      border:2px dashed #9ca3af;
+      background:#fffbea;
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      align-items:center
+    }
+    .canvas.empty::before{
+      content:"把小动物和箭头拖到这里，拼成一条“谁吃谁”的食物链";
+      color:#9ca3af;
+      font-size:0.95rem
+    }
+
+    .controls{
+      margin-top:12px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px
+    }
+    button.btn{
+      padding:8px 14px;
+      border-radius:999px;
+      border:none;
+      cursor:pointer;
+      font-size:0.95rem;
+      font-weight:bold;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      box-shadow:var(--shadow);
+      color:#fff
+    }
+    button.btn-primary{background:var(--primary)}
+    button.btn-secondary{background:#6b7280}
+    button.btn-danger{background:#e74c3c}
+    button.btn:disabled{
+      opacity:.5;
+      cursor:not-allowed;
+      box-shadow:none
+    }
+
+    .current-chain{
+      margin-top:10px;
+      font-size:0.98rem
+    }
+    .current-chain span.value{font-weight:bold;color:#111827}
+    .tip{font-size:0.9rem;color:#6b7280;margin-top:4px}
+
+    /* 教师端 */
+    .teacher-controls{
+      display:flex;
+      justify-content:flex-end;
+      gap:12px;
+      margin-bottom:16px
+    }
+    .teacher-btn{
+      padding:8px 14px;
+      border-radius:999px;
+      border:none;
+      font-size:0.95rem;
+      font-weight:bold;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      background:var(--light);
+      box-shadow:var(--shadow)
+    }
+    .teacher-btn.refresh{color:var(--primary)}
+    .teacher-btn.clear{color:#e74c3c}
+
+    .stats-container{
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:16px;
+      margin-bottom:18px
+    }
+    .stat-card{
+      background:var(--light);
+      border-radius:10px;
+      padding:14px;
+      text-align:center;
+      box-shadow:var(--shadow)
+    }
+    .stat-title{font-size:0.95rem;color:#4b5563}
+    .stat-value{
+      font-size:1.8rem;
+      font-weight:bold;
+      color:var(--primary);
+      margin:6px 0
+    }
+
+    .summary-box{
+      background:#fff;
+      border-radius:10px;
+      padding:16px;
+      box-shadow:var(--shadow)
+    }
+    .summary-title{
+      font-size:1.1rem;
+      color:var(--primary);
+      margin-bottom:10px;
+      display:flex;
+      align-items:center;
+      gap:6px
+    }
+    .summary-list{
+      margin-left:20px
+    }
+    .summary-list li{
+      margin:4px 0;
+      font-size:1rem
+    }
+    .no-data{
+      text-align:center;
+      padding:40px;
+      color:#666;
+      font-size:1.05rem
+    }
+
+    .toast-message{
+      position:fixed;
+      left:50%;
+      top:12px;
+      transform:translateX(-50%);
+      padding:8px 16px;
+      border-radius:999px;
+      font-size:0.95rem;
+      font-weight:bold;
+      color:#155724;
+      background:#d4edda;
+      box-shadow:var(--shadow);
+      opacity:0;
+      pointer-events:none;
+      transition:opacity .25s ease;
+      z-index:1000
+    }
+    .toast-message.error{
+      background:#f8d7da;
+      color:#721c24
+    }
+    .toast-message.show{opacity:1}
+
+    @media (max-width:768px){
+      .stats-container{grid-template-columns:1fr}
+      .tab{padding:10px 18px;font-size:1rem}
+      .teacher-controls{justify-content:center}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1><i class="fas fa-paw"></i> 食物链观察记录系统</h1>
+      <p class="subtitle">拖一拖、连一连，看看大家拼出了哪些“谁吃谁”的食物链</p>
+    </header>
+
+    <div class="tab-container">
+      <button class="tab active" data-tab="student">学生操作</button>
+      <button class="tab" data-tab="teacher">教师大屏</button>
+    </div>
+
+    <!-- 学生填写 -->
+    <div id="student" class="tab-content active">
+      <div class="student-form">
+        <h2 class="form-title"><i class="fas fa-seedling"></i> 拼一拼：谁吃谁？</h2>
+        <div class="instruction">
+          请从下面选择小动物和箭头，拖到黄色区域，拼出一条完整的食物链，然后点击“提交给老师”。
+        </div>
+
+        <!-- 模块库 -->
+        <div class="palette" id="palette"></div>
+
+        <!-- 画布 -->
+        <div class="canvas empty" id="canvas"></div>
+
+        <!-- 按钮 -->
+        <div class="controls">
+          <button class="btn btn-secondary" id="undoBtn">
+            <i class="fas fa-undo"></i> 后退一步
+          </button>
+          <button class="btn btn-danger" id="clearBtn">
+            <i class="fas fa-broom"></i> 全部清空
+          </button>
+          <button class="btn btn-primary" id="submitBtn">
+            <i class="fas fa-paper-plane"></i> 提交给老师
+          </button>
+        </div>
+
+        <div class="current-chain">
+          你当前的食物链：<span class="value" id="currentChain">（还没有哦）</span>
+        </div>
+        <div class="tip">
+          建议：一条食物链一般有 3～4 个生物，最多不超过 5 个。          
+        </div>
+      </div>
+    </div>
+
+    <!-- 教师查看 -->
+    <div id="teacher" class="tab-content">
+      <div class="teacher-dashboard">
+        <div class="teacher-controls">
+          <button class="teacher-btn refresh" id="refresh-btn">
+            <i class="fas fa-sync-alt"></i> 刷新数据
+          </button>
+          <button class="teacher-btn clear" id="clear-btn">
+            <i class="fas fa-trash-alt"></i> 清空数据
+          </button>
+        </div>
+
+        <div class="stats-container">
+          <div class="stat-card">
+            <div class="stat-title">总提交条数</div>
+            <div class="stat-value" id="total-submissions">0</div>
+            <div class="stat-desc">所有学生提交的记录</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">不同食物链条数</div>
+            <div class="stat-value" id="unique-chains">0</div>
+            <div class="stat-desc">去重后的答案种类</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-title">今日提交</div>
+            <div class="stat-value" id="today-submissions">0</div>
+            <div class="stat-desc">今天课堂内的记录</div>
+          </div>
+        </div>
+
+        <div class="summary-box">
+          <div class="summary-title">
+            <i class="fas fa-list-ol"></i> 全班食物链汇总
+          </div>
+          <ol class="summary-list" id="summaryList"></ol>
+          <div class="no-data" id="noDataTip" style="display:none;">
+            <i class="fas fa-clipboard-list" style="font-size:2.2rem;margin-bottom:10px;"></i>
+            <p>还没有学生提交食物链哦～</p>
+            <p style="margin-top:8px;font-size:0.95rem;">等一等，或者提醒大家点击“提交给老师”。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 顶部状态提示 -->
+  <div class="toast-message" id="toast"></div>
+
+  <!-- Firebase + 逻辑 -->
+  <script type="module">
+    /************ 1）初始化 Firebase（沿用你岩石系统的写法） ************/
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-app.js";
+    import {
+      getFirestore, collection, addDoc, serverTimestamp,
+      query, orderBy, onSnapshot, getDocs, deleteDoc, doc,
+      enableIndexedDbPersistence
+    } from "https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore.js";
+
+    // TODO：把这里替换成你自己 Firebase 控制台里的配置（跟岩石系统那份一样）
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+      projectId: "YOUR_PROJECT_ID",
+      storageBucket: "YOUR_PROJECT_ID.appspot.com",
+      messagingSenderId: "YOUR_SENDER_ID",
+      appId: "YOUR_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // 可选：离线缓存
+    enableIndexedDbPersistence(db).catch(err=>{
+      console.warn("IndexedDB 持久化不可用：", err?.code || err);
+    });
+
+    // 食物链集合
+    const colRef = collection(db, "foodchains");
+
+    /************ 2）UI：标签切换 ************/
+    document.querySelectorAll('.tab').forEach(tab=>{
+      tab.addEventListener('click', ()=>{
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+      });
+    });
+
+    /************ 3）学生端：拖拽模块初始化 ************/
+    const speciesList = [
+      "🌳树木","🐺狼","🦌鹿","🐍蛇","🌱青草","🐛虫子","🐸青蛙","🐰兔子","🦅老鹰"
+    ];
+    const arrowList = ["→","←"];
+
+    const paletteEl = document.getElementById("palette");
+    const canvasEl = document.getElementById("canvas");
+    const currentChainEl = document.getElementById("currentChain");
+
+    const undoBtn = document.getElementById("undoBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const submitBtn = document.getElementById("submitBtn");
+    const toastEl = document.getElementById("toast");
+
+    let hasSubmitted = false; // 本机一次提交锁定
+
+    function showToast(msg, type="success"){
+      toastEl.textContent = msg;
+      toastEl.classList.remove("error");
+      if(type==="error") toastEl.classList.add("error");
+      toastEl.classList.add("show");
+      setTimeout(()=>toastEl.classList.remove("show"), 1600);
+    }
+
+    function createPaletteBlock(label, type){
+      const div = document.createElement("div");
+      div.className = `block ${type}`;
+      div.textContent = label;
+      div.draggable = true;
+      div.dataset.type = type;
+
+      if(type === "species"){
+        const pureName = label.replace(/^[^\u4e00-\u9fa5]+/, ""); // 去掉前面的 emoji
+        div.dataset.value = pureName;
+      }else{
+        div.dataset.value = label;
+      }
+
+      div.addEventListener("dragstart", e=>{
+        const payload = {
+          type,
+          value: div.dataset.value,
+          label
+        };
+        e.dataTransfer.setData("text/plain", JSON.stringify(payload));
+      });
+
+      return div;
+    }
+
+    function createCanvasBlock(type, value, label){
+      const div = document.createElement("div");
+      div.className = `block ${type}`;
+      div.textContent = label;
+      div.dataset.type = type;
+      div.dataset.value = value;
+      return div;
+    }
+
+    function updateCanvasEmptyState(){
+      if(canvasEl.children.length === 0){
+        canvasEl.classList.add("empty");
+      }else{
+        canvasEl.classList.remove("empty");
+      }
+    }
+
+    function parseCanvasSpeciesSequence(){
+      const arr = [];
+      Array.from(canvasEl.children).forEach(child=>{
+        if(child.dataset.type === "species"){
+          arr.push(child.dataset.value);
+        }
+      });
+      return arr;
+    }
+
+    function updateCurrentChainDisplay(){
+      const seq = parseCanvasSpeciesSequence();
+      if(seq.length === 0){
+        currentChainEl.textContent = "（还没有哦）";
+      }else{
+        currentChainEl.textContent = seq.join("→");
+      }
+    }
+
+    function initPalette(){
+      speciesList.forEach(s=>{
+        paletteEl.appendChild(createPaletteBlock(s, "species"));
+      });
+      arrowList.forEach(a=>{
+        paletteEl.appendChild(createPaletteBlock(a, "arrow"));
+      });
+    }
+
+    function initCanvasDragDrop(){
+      canvasEl.addEventListener("dragover", e=>e.preventDefault());
+      canvasEl.addEventListener("drop", e=>{
+        e.preventDefault();
+        if(hasSubmitted){
+          showToast("已经提交过啦，不能再修改了。","error");
+          return;
+        }
+        const text = e.dataTransfer.getData("text/plain");
+        if(!text) return;
+        let payload;
+        try{ payload = JSON.parse(text); }catch{ return; }
+        const node = createCanvasBlock(payload.type, payload.value, payload.label);
+        canvasEl.appendChild(node);
+        updateCanvasEmptyState();
+        updateCurrentChainDisplay();
+      });
+    }
+
+    undoBtn.addEventListener("click", ()=>{
+      if(hasSubmitted) return;
+      if(canvasEl.children.length > 0){
+        canvasEl.removeChild(canvasEl.lastElementChild);
+        updateCanvasEmptyState();
+        updateCurrentChainDisplay();
+      }
+    });
+
+    clearBtn.addEventListener("click", ()=>{
+      if(hasSubmitted) return;
+      canvasEl.innerHTML = "";
+      updateCanvasEmptyState();
+      updateCurrentChainDisplay();
+    });
+
+    function lockThisClient(){
+      hasSubmitted = true;
+      submitBtn.disabled = true;
+      undoBtn.disabled = true;
+      clearBtn.disabled = true;
+      paletteEl.classList.add("locked");
+      canvasEl.classList.add("locked");
+    }
+
+    submitBtn.addEventListener("click", async ()=>{
+      if(hasSubmitted){
+        showToast("已经提交过啦，等老师一起看结果吧！","error");
+        return;
+      }
+      const seq = parseCanvasSpeciesSequence();
+      if(seq.length < 2){
+        showToast("至少要有两个生物才能算一条食物链哦～","error");
+        return;
+      }
+
+      const now = new Date();
+      const record = {
+        chainArray: seq,
+        chainStr: seq.join("→"),
+        date: now.toLocaleDateString('zh-CN'),
+        timestamp: serverTimestamp(),
+        createdAt: serverTimestamp()
+      };
+
+      try{
+        await addDoc(colRef, record);
+        if(seq.length < 3 || seq.length > 5){
+          showToast("已提交：下次可以试试 3～5 个生物的食物链～");
+        }else{
+          showToast("提交成功！本组不能再修改了。");
+        }
+        lockThisClient();
+      }catch(err){
+        console.error("提交失败：", err);
+        showToast("提交失败，请检查网络或让老师帮忙～","error");
+      }
+    });
+
+    /************ 4）教师端：实时订阅 + 统计汇总 ************/
+    const summaryListEl = document.getElementById("summaryList");
+    const noDataTipEl = document.getElementById("noDataTip");
+    const totalSubmissionsEl = document.getElementById("total-submissions");
+    const uniqueChainsEl = document.getElementById("unique-chains");
+    const todaySubmissionsEl = document.getElementById("today-submissions");
+    const refreshBtn = document.getElementById("refresh-btn");
+    const clearBtnTeacher = document.getElementById("clear-btn");
+
+    const q = query(colRef, orderBy('timestamp','desc'));
+
+    function computeSummary(records){
+      const counter = {};
+      records.forEach(r=>{
+        const key = r.chainStr || (Array.isArray(r.chainArray) ? r.chainArray.join("→") : "");
+        if(!key) return;
+        if(!counter[key]) counter[key] = 0;
+        counter[key] += 1;
+      });
+      const entries = Object.entries(counter).sort((a,b)=>b[1]-a[1]);
+      return entries;
+    }
+
+    function getTodayCount(records){
+      const today = new Date().toLocaleDateString('zh-CN');
+      return records.filter(r => r.date === today).length;
+    }
+
+    function renderSummaryFromRecords(records){
+      const entries = computeSummary(records);
+
+      totalSubmissionsEl.textContent = records.length;
+      uniqueChainsEl.textContent = entries.length;
+      todaySubmissionsEl.textContent = getTodayCount(records);
+
+      summaryListEl.innerHTML = "";
+      if(entries.length === 0){
+        noDataTipEl.style.display = "block";
+        return;
+      }else{
+        noDataTipEl.style.display = "none";
+      }
+
+      entries.forEach(([chain,count])=>{
+        const li = document.createElement("li");
+        li.textContent = `${chain}（${count}）`;
+        summaryListEl.appendChild(li);
+      });
+    }
+
+    // 实时订阅
+    onSnapshot(q, snapshot=>{
+      const records = snapshot.docs.map(d=>{
+        const data = d.data();
+        const t = data.timestamp?.toMillis ? data.timestamp.toMillis() : 0;
+        return { id:d.id, ...data, timestamp:t };
+      });
+      renderSummaryFromRecords(records);
+    }, err=>{
+      console.error("实时订阅失败：", err);
+      showToast("教师端实时数据订阅失败，可尝试点击刷新按钮","error");
+    });
+
+    // 手动刷新
+    refreshBtn.addEventListener("click", async ()=>{
+      try{
+        const snap = await getDocs(q);
+        const records = snap.docs.map(d=>{
+          const data = d.data();
+          const t = data.timestamp?.toMillis ? data.timestamp.toMillis() : 0;
+          return { id:d.id, ...data, timestamp:t };
+        });
+        renderSummaryFromRecords(records);
+        showToast("数据已刷新！");
+      }catch(err){
+        console.error("刷新失败：", err);
+        showToast("刷新失败，请稍后再试","error");
+      }
+    });
+
+    // 清空数据（老师用）
+    clearBtnTeacher.addEventListener("click", async ()=>{
+      if(!confirm("确定要清空所有食物链记录吗？此操作不可恢复！")) return;
+      showToast("正在清空数据...");
+      try{
+        const snap = await getDocs(colRef);
+        await Promise.all(
+          snap.docs.map(docSnap => deleteDoc(doc(db, "foodchains", docSnap.id)))
+        );
+        showToast("所有记录已清空！");
+      }catch(err){
+        console.error("清空失败：", err);
+        showToast("清空失败，请稍后重试","error");
+      }
+    });
+
+    /************ 5）启动：初始化前端 ************/
+    initPalette();
+    initCanvasDragDrop();
+    updateCanvasEmptyState();
+    updateCurrentChainDisplay();
+  </script>
+</body>
+</html>
