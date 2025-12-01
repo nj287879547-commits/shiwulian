@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>小小生态学家：食物链观察记录系统（云端实时版）</title>
+  <title>小小生态学家：食物链观察记录系统（三行三框版）</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Arial Rounded MT Bold','Segoe UI','Microsoft YaHei',sans-serif}
@@ -116,46 +116,71 @@
       font-weight:700
     }
 
+    /* 提交区域：三行 */
+    .submission-area{
+      border:2px solid #e5e7eb;
+      border-radius:12px;
+      padding:14px;
+      background:#f9fafb;
+      margin-top:14px;
+      transition:.2s;
+    }
+    .submission-area.active{
+      border-color:var(--primary);
+      box-shadow:0 0 0 2px rgba(74,111,165,.25);
+      background:#eff6ff;
+    }
+    .submission-area h3{
+      margin-bottom:8px;
+      font-size:1.05rem;
+      color:var(--primary);
+    }
+
     .canvas{
-      margin-top:8px;
-      min-height:80px;
-      padding:12px;
+      margin-top:4px;
+      min-height:48px;
+      padding:8px 12px;
       border-radius:12px;
       border:2px dashed #9ca3af;
       background:#fffbea;
       display:flex;
-      flex-wrap:wrap;
+      flex-wrap:nowrap;      /* 不换行，保证一行展示 */
+      align-items:center;
       gap:6px;
-      align-items:center
+      overflow-x:auto;       /* 太长就左右滑动 */
     }
     .canvas.empty::before{
       content:"把小动物和箭头拖到这里，或点击上面的模块添加，拼成一条“谁吃谁”的食物链";
       color:#9ca3af;
-      font-size:0.95rem
+      font-size:0.95rem;
+      white-space:nowrap;
     }
 
     .controls{
-      margin-top:12px;
+      margin-top:10px;
       display:flex;
       flex-wrap:wrap;
-      gap:10px
+      gap:8px
     }
     button.btn{
-      padding:8px 14px;
+      padding:6px 12px;
       border-radius:999px;
       border:none;
       cursor:pointer;
-      font-size:0.95rem;
+      font-size:0.9rem;
       font-weight:bold;
       display:inline-flex;
       align-items:center;
       gap:6px;
       box-shadow:var(--shadow);
-      color:#fff
+      color:#fff;
+      transition:.2s;
     }
     button.btn-primary{background:var(--primary)}
     button.btn-secondary{background:#6b7280}
     button.btn-danger{background:#e74c3c}
+button.btn-success{background:#16a34a}
+
     button.btn:disabled{
       opacity:.5;
       cursor:not-allowed;
@@ -163,11 +188,11 @@
     }
 
     .current-chain{
-      margin-top:10px;
-      font-size:0.98rem
+      margin-top:6px;
+      font-size:0.95rem
     }
     .current-chain span.value{font-weight:bold;color:#111827}
-    .tip{font-size:0.9rem;color:#6b7280;margin-top:4px}
+    .tip{font-size:0.85rem;color:#6b7280;margin-top:2px}
 
     /* 教师端 */
     .teacher-controls{
@@ -288,36 +313,82 @@
       <div class="student-form">
         <h2 class="form-title"><i class="fas fa-seedling"></i> 拼一拼：谁吃谁？</h2>
         <div class="instruction">
-          电脑上可以拖动模块，手机 / 平板上点击模块即可添加到下面的黄色区域，拼出一条完整的食物链，再点击“提交给老师”。
+          电脑上可以拖动模块，手机 / 平板上点击模块即可添加到某一行的黄色区域，拼出一条完整的食物链。
+          每一行都有自己的撤回、清空、提交按钮，可以写三条不同的食物链。
         </div>
 
         <!-- 模块库 -->
         <div class="palette" id="palette"></div>
 
-        <!-- 画布 -->
-        <div class="canvas empty" id="canvas"></div>
-
-        <!-- 按钮 -->
-        <div class="controls">
-          <button class="btn btn-secondary" id="undoBtn">
-            <i class="fas fa-undo"></i> 后退一步
-          </button>
-          <button class="btn btn-danger" id="clearBtn">
-            <i class="fas fa-broom"></i> 全部清空
-          </button>
-          <button class="btn btn-primary" id="submitBtn">
-            <i class="fas fa-paper-plane"></i> 提交给老师
-          </button>
+        <!-- 三个独立提交区域（每行一个框） -->
+        <div class="submission-area active" id="area-1">
+          <h3>食物链 1</h3>
+          <div class="canvas empty" id="canvas-1"></div>
+          <div class="controls">
+            <button class="btn btn-secondary" id="undoBtn-1">
+              <i class="fas fa-undo"></i> 撤回
+            </button>
+            <button class="btn btn-danger" id="clearBtn-1">
+              <i class="fas fa-broom"></i> 清空
+            </button>
+            <button class="btn btn-primary" id="submitBtn-1">
+              <i class="fas fa-paper-plane"></i> 提交
+            </button>
+          </div>
+          <div class="current-chain">
+            当前食物链：<span class="value" id="currentChain-1">（还没有哦）</span>
+          </div>
+          <div class="tip" id="submitHint-1">
+            状态：还未提交。
+          </div>
         </div>
 
-        <div class="current-chain">
-          你当前的食物链：<span class="value" id="currentChain">（还没有哦）</span>
+        <div class="submission-area" id="area-2">
+          <h3>食物链 2</h3>
+          <div class="canvas empty" id="canvas-2"></div>
+          <div class="controls">
+            <button class="btn btn-secondary" id="undoBtn-2">
+              <i class="fas fa-undo"></i> 撤回
+            </button>
+            <button class="btn btn-danger" id="clearBtn-2">
+              <i class="fas fa-broom"></i> 清空
+            </button>
+            <button class="btn btn-primary" id="submitBtn-2">
+              <i class="fas fa-paper-plane"></i> 提交
+            </button>
+          </div>
+          <div class="current-chain">
+            当前食物链：<span class="value" id="currentChain-2">（还没有哦）</span>
+          </div>
+          <div class="tip" id="submitHint-2">
+            状态：还未提交。
+          </div>
         </div>
-        <div class="tip">
+
+        <div class="submission-area" id="area-3">
+          <h3>食物链 3</h3>
+          <div class="canvas empty" id="canvas-3"></div>
+          <div class="controls">
+            <button class="btn btn-secondary" id="undoBtn-3">
+              <i class="fas fa-undo"></i> 撤回
+            </button>
+            <button class="btn btn-danger" id="clearBtn-3">
+              <i class="fas fa-broom"></i> 清空
+            </button>
+            <button class="btn btn-primary" id="submitBtn-3">
+              <i class="fas fa-paper-plane"></i> 提交
+            </button>
+          </div>
+          <div class="current-chain">
+            当前食物链：<span class="value" id="currentChain-3">（还没有哦）</span>
+          </div>
+          <div class="tip" id="submitHint-3">
+            状态：还未提交。
+          </div>
+        </div>
+
+        <div class="tip" style="margin-top:10px;">
           建议：一条食物链一般有 3～4 个生物，最多不超过 5 个。
-        </div>
-        <div class="tip" id="submitHint">
-          状态：还未提交。
         </div>
       </div>
     </div>
@@ -360,7 +431,7 @@
           <div class="no-data" id="noDataTip" style="display:none;">
             <i class="fas fa-clipboard-list" style="font-size:2.2rem;margin-bottom:10px;"></i>
             <p>还没有学生提交食物链哦～</p>
-            <p style="margin-top:8px;font-size:0.95rem;">等一等，或者提醒大家点击“提交给老师”。</p>
+            <p style="margin-top:8px;font-size:0.95rem;">等一等，或者提醒大家点击“提交”。</p>
           </div>
         </div>
       </div>
@@ -370,14 +441,12 @@
   <!-- 顶部状态提示 -->
   <div class="toast-message" id="toast"></div>
 
-   <script type="module">
-    /************ 1）初始化 Supabase（复用你之前的项目） ************/
+  <script type="module">
+    /************ 1）初始化 Supabase ************/
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-    // TODO：把下面两个替换成你自己项目的配置
-  const SUPABASE_URL = "https://fdgprrtllwycykgulbnz.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkZ3BycnRsbHd5Y3lrZ3VsYm56Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1Mjg4MDksImV4cCI6MjA3ODEwNDgwOX0.tWyXbTgj9XnKcFqo9qmKw-u6WRTJoGBCkDswi3ZwBRU";
-
+    const SUPABASE_URL = "https://fdgprrtllwycykgulbnz.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZkZ3BycnRsbHd5Y3lrZ3VsYm56Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI1Mjg4MDksImV4cCI6MjA3ODEwNDgwOX0.tWyXbTgj9XnKcFqo9qmKw-u6WRTJoGBCkDswi3ZwBRU";
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     const TABLE_NAME = "foodchains";
@@ -392,26 +461,25 @@
       });
     });
 
-    /************ 3）学生端：拖拽 / 点击 模块初始化 ************/
+    /************ 3）学生端：三行三框 + 拖拽 / 点击 ************/
     const speciesList = [
       "🌳树木","🐺狼","🦌鹿","🐍蛇","🌱青草","🐛虫子","🐸青蛙","🐰兔子","🦅老鹰"
     ];
     const arrowList = ["→","←"];
 
     const paletteEl = document.getElementById("palette");
-    const canvasEl = document.getElementById("canvas");
-    const currentChainEl = document.getElementById("currentChain");
-    const submitHintEl = document.getElementById("submitHint");
-
-    const undoBtn = document.getElementById("undoBtn");
-    const clearBtn = document.getElementById("clearBtn");
-    const submitBtn = document.getElementById("submitBtn");
     const toastEl = document.getElementById("toast");
-
     const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 
-    let hasSubmitted = false;   // 本机一次提交锁定
-    let isSubmitting = false;   // 正在提交中，防止连点
+    // 每一行自己的状态
+    const areaStates = {
+      1:{ hasSubmitted:false, isSubmitting:false },
+      2:{ hasSubmitted:false, isSubmitting:false },
+      3:{ hasSubmitted:false, isSubmitting:false }
+    };
+
+    // 当前激活的是哪一行（手机点击模块时用）
+    let activeCanvasId = 1;
 
     function showToast(msg, type="success"){
       toastEl.textContent = msg;
@@ -434,7 +502,7 @@
         div.dataset.value = label;
       }
 
-      // PC：使用原生拖拽
+      // PC：原生拖拽
       if (!isTouchDevice) {
         div.draggable = true;
         div.addEventListener("dragstart", e=>{
@@ -447,10 +515,10 @@
         });
       }
 
-      // 手机 / 平板：点击直接添加到画布
+      // 手机：点击添加到当前激活行
       if (isTouchDevice) {
         div.addEventListener("click", ()=>{
-          addBlockToCanvas(type, div.dataset.value, label);
+          addBlockToCanvas(type, div.dataset.value, label, activeCanvasId);
         });
       }
 
@@ -466,18 +534,21 @@
       return div;
     }
 
-    function addBlockToCanvas(type, value, label){
-      if(hasSubmitted){
-        showToast("已经提交过啦，不能再修改了。","error");
+    function addBlockToCanvas(type, value, label, areaId){
+      if(areaStates[areaId].hasSubmitted){
+        showToast(`食物链 ${areaId} 已经提交过啦，不能再修改了。`,"error");
         return;
       }
+      const canvasEl = document.getElementById(`canvas-${areaId}`);
       const node = createCanvasBlock(type, value, label);
       canvasEl.appendChild(node);
-      updateCanvasEmptyState();
-      updateCurrentChainDisplay();
+      updateCanvasEmptyState(areaId);
+      updateCurrentChainDisplay(areaId);
+      updateUndoButtons();
     }
 
-    function updateCanvasEmptyState(){
+    function updateCanvasEmptyState(areaId){
+      const canvasEl = document.getElementById(`canvas-${areaId}`);
       if(canvasEl.children.length === 0){
         canvasEl.classList.add("empty");
       }else{
@@ -485,7 +556,8 @@
       }
     }
 
-    function parseCanvasSpeciesSequence(){
+    function parseCanvasSpeciesSequence(areaId){
+      const canvasEl = document.getElementById(`canvas-${areaId}`);
       const arr = [];
       Array.from(canvasEl.children).forEach(child=>{
         if(child.dataset.type === "species"){
@@ -495,8 +567,9 @@
       return arr;
     }
 
-    function updateCurrentChainDisplay(){
-      const seq = parseCanvasSpeciesSequence();
+    function updateCurrentChainDisplay(areaId){
+      const currentChainEl = document.getElementById(`currentChain-${areaId}`);
+      const seq = parseCanvasSpeciesSequence(areaId);
       if(seq.length === 0){
         currentChainEl.textContent = "（还没有哦）";
       }else{
@@ -513,62 +586,132 @@
       });
     }
 
-    function initCanvasDragDrop(){
-      canvasEl.addEventListener("dragover", e=>e.preventDefault());
-      canvasEl.addEventListener("drop", e=>{
-        e.preventDefault();
-        const text = e.dataTransfer.getData("text/plain");
-        if(!text) return;
-        let payload;
-        try{ payload = JSON.parse(text); }catch{ return; }
-        addBlockToCanvas(payload.type, payload.value, payload.label);
+    // 设置激活行（手机点击模块时用）
+    function setActiveCanvas(areaId){
+      activeCanvasId = areaId;
+      [1,2,3].forEach(id=>{
+        const areaEl = document.getElementById(`area-${id}`);
+        if(id === areaId) areaEl.classList.add("active");
+        else areaEl.classList.remove("active");
       });
     }
 
-    undoBtn.addEventListener("click", ()=>{
-      if(hasSubmitted) return;
+    function initCanvasDragDrop(){
+      [1,2,3].forEach(areaId=>{
+        const canvasEl = document.getElementById(`canvas-${areaId}`);
+        const areaEl = document.getElementById(`area-${areaId}`);
+
+        // 点击整个区域，切换激活行
+        areaEl.addEventListener("click", (e)=>{
+          // 避免点按钮时也切换，可以简单放开：小学生其实无所谓
+          setActiveCanvas(areaId);
+        });
+
+        // PC 拖拽放入
+        canvasEl.addEventListener("dragover", e=>e.preventDefault());
+        canvasEl.addEventListener("drop", e=>{
+          e.preventDefault();
+          const text = e.dataTransfer.getData("text/plain");
+          if(!text) return;
+          let payload;
+          try{ payload = JSON.parse(text); }catch{ return; }
+          addBlockToCanvas(payload.type, payload.value, payload.label, areaId);
+        });
+      });
+    }
+
+    function initAreaControls(areaId){
+      const undoBtn = document.getElementById(`undoBtn-${areaId}`);
+      const clearBtn = document.getElementById(`clearBtn-${areaId}`);
+      const submitBtn = document.getElementById(`submitBtn-${areaId}`);
+
+      undoBtn.addEventListener("click", ()=>{
+        handleUndo(areaId);
+      });
+
+      clearBtn.addEventListener("click", ()=>{
+        handleClear(areaId);
+      });
+
+      submitBtn.addEventListener("click", ()=>{
+        handleSubmit(areaId);
+      });
+    }
+
+    function handleUndo(areaId){
+      if(areaStates[areaId].hasSubmitted) return;
+      const canvasEl = document.getElementById(`canvas-${areaId}`);
       if(canvasEl.children.length > 0){
         canvasEl.removeChild(canvasEl.lastElementChild);
-        updateCanvasEmptyState();
-        updateCurrentChainDisplay();
-      }
-    });
-
-    clearBtn.addEventListener("click", ()=>{
-      if(hasSubmitted) return;
-      canvasEl.innerHTML = "";
-      updateCanvasEmptyState();
-      updateCurrentChainDisplay();
-    });
-
-    function lockThisClient(){
-      hasSubmitted = true;
-      submitBtn.disabled = true;
-      undoBtn.disabled = true;
-      clearBtn.disabled = true;
-      paletteEl.classList.add("locked");
-      canvasEl.classList.add("locked");
-      if (submitHintEl) {
-        submitHintEl.textContent = "状态：已提交成功，请等待老师展示全班结果。";
-        submitHintEl.style.color = "#16a34a";
-        submitHintEl.style.fontWeight = "bold";
+        updateCanvasEmptyState(areaId);
+        updateCurrentChainDisplay(areaId);
+        updateUndoButtons();
       }
     }
 
-    /************ 4）学生端：提交到 Supabase 表 foodchains ************/
-    submitBtn.addEventListener("click", async ()=>{
-      // 已经提交过
-      if(hasSubmitted){
-        showToast("已经提交过啦，等老师一起看结果吧！","error");
+    function handleClear(areaId){
+      if(areaStates[areaId].hasSubmitted) return;
+      const canvasEl = document.getElementById(`canvas-${areaId}`);
+      canvasEl.innerHTML = "";
+      updateCanvasEmptyState(areaId);
+      updateCurrentChainDisplay(areaId);
+      updateUndoButtons();
+    }
+
+    function updateUndoButtons(){
+      [1,2,3].forEach(areaId=>{
+        const canvasEl = document.getElementById(`canvas-${areaId}`);
+        const undoBtn = document.getElementById(`undoBtn-${areaId}`);
+        const clearBtn = document.getElementById(`clearBtn-${areaId}`);
+        if(canvasEl.children.length === 0 || areaStates[areaId].hasSubmitted){
+          undoBtn.disabled = true;
+          clearBtn.disabled = true;
+        }else{
+          undoBtn.disabled = false;
+          clearBtn.disabled = false;
+        }
+      });
+    }
+
+  function lockArea(areaId){
+  areaStates[areaId].hasSubmitted = true;
+  const submitBtn = document.getElementById(`submitBtn-${areaId}`);
+  const undoBtn = document.getElementById(`undoBtn-${areaId}`);
+  const clearBtn = document.getElementById(`clearBtn-${areaId}`);
+  const canvasEl = document.getElementById(`canvas-${areaId}`);
+  const submitHintEl = document.getElementById(`submitHint-${areaId}`);
+
+  // 按钮置灰 + 改成“已提交”绿色
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fas fa-check"></i> 已提交';
+  submitBtn.classList.remove('btn-primary');
+  submitBtn.classList.add('btn-success');
+
+  undoBtn.disabled = true;
+  clearBtn.disabled = true;
+  canvasEl.classList.add("locked");
+
+  if(submitHintEl){
+    submitHintEl.textContent = "状态：已提交成功，请等待老师展示全班结果。";
+    submitHintEl.style.color = "#16a34a";
+    submitHintEl.style.fontWeight = "bold";
+  }
+  updateUndoButtons();
+}
+
+
+    /************ 4）学生端：提交到 Supabase（每行一条记录） ************/
+    async function handleSubmit(areaId){
+      if(areaStates[areaId].hasSubmitted){
+        showToast(`食物链 ${areaId} 已经提交过啦，等老师一起看结果吧！`,"error");
         return;
       }
-      // 正在提交中
-      if(isSubmitting){
+      if(areaStates[areaId].isSubmitting){
         showToast("正在提交中，请稍等哦～");
         return;
       }
 
-      const seq = parseCanvasSpeciesSequence();
+      const seq = parseCanvasSpeciesSequence(areaId);
       if(seq.length < 2){
         showToast("至少要有两个生物才能算一条食物链哦～","error");
         return;
@@ -582,12 +725,12 @@
         timestamp: nowMs
       };
 
-      // 点击后立刻给孩子反馈 & 锁按钮（防连点）
-      isSubmitting = true;
+      const submitBtn = document.getElementById(`submitBtn-${areaId}`);
       const originalHTML = submitBtn.innerHTML;
+      areaStates[areaId].isSubmitting = true;
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 正在提交…';
-      showToast("正在提交到老师的大屏，请稍等～");
+      showToast(`正在提交食物链 ${areaId}，请稍等～`);
 
       const { error } = await supabase.from(TABLE_NAME).insert(record);
 
@@ -596,18 +739,18 @@
         showToast("提交失败，请检查网络或让老师帮忙～","error");
         submitBtn.disabled = false;
         submitBtn.innerHTML = originalHTML;
-        isSubmitting = false;
+        areaStates[areaId].isSubmitting = false;
         return;
       }
 
       if(seq.length < 3 || seq.length > 5){
-        showToast("提交成功！下次可以试试 3～5 个生物的食物链～");
+        showToast(`食物链 ${areaId} 提交成功！下次可以试试 3～5 个生物的食物链～`);
       }else{
-        showToast("提交成功！本组不能再修改了。");
+        showToast(`食物链 ${areaId} 提交成功！`);
       }
-      lockThisClient();
-      isSubmitting = false;
-    });
+      lockArea(areaId);
+      areaStates[areaId].isSubmitting = false;
+    }
 
     /************ 5）教师端：统计与汇总（从 Supabase 拉数据） ************/
     const summaryListEl = document.getElementById("summaryList");
@@ -626,8 +769,7 @@
         if(!counter[key]) counter[key] = 0;
         counter[key] += 1;
       });
-      const entries = Object.entries(counter).sort((a,b)=>b[1]-a[1]);
-      return entries;
+      return Object.entries(counter).sort((a,b)=>b[1]-a[1]);
     }
 
     function getTodayCount(records){
@@ -657,8 +799,8 @@
       });
     }
 
-    // 从 Supabase 拉一遍数据并渲染
-    async function fetchAndRender(){
+    async function
+    fetchAndRender(){
       const { data, error } = await supabase
         .from(TABLE_NAME)
         .select('*')
@@ -672,7 +814,7 @@
       renderSummaryFromRecords(data || []);
     }
 
-    // 实时订阅：foodchains 表有变化就自动刷新
+    // 实时订阅
     const channel = supabase
       .channel('foodchains-change')
       .on(
@@ -682,20 +824,18 @@
       )
       .subscribe();
 
-    // 手动刷新按钮
     refreshBtn.addEventListener("click", async ()=>{
       await fetchAndRender();
       showToast("数据已刷新！");
     });
 
-    // 清空数据（老师用）
     clearBtnTeacher.addEventListener("click", async ()=>{
       if(!confirm("确定要清空所有食物链记录吗？此操作不可恢复！")) return;
       showToast("正在清空数据...");
       const { error } = await supabase
         .from(TABLE_NAME)
         .delete()
-        .neq('id', '00000000-0000-0000-0000-000000000000'); // 条件只是为了满足 Supabase 必须有过滤条件的限制
+        .neq('id', '00000000-0000-0000-0000-000000000000');
 
       if(error){
         console.error("清空失败：", error);
@@ -709,9 +849,14 @@
     /************ 6）启动：初始化前端 ************/
     initPalette();
     initCanvasDragDrop();
-    updateCanvasEmptyState();
-    updateCurrentChainDisplay();
-    fetchAndRender();  // 老师端初次进入时拉一次数据
+    [1,2,3].forEach(id=>{
+      initAreaControls(id);
+      updateCanvasEmptyState(id);
+      updateCurrentChainDisplay(id);
+    });
+    setActiveCanvas(1);
+    updateUndoButtons();
+    fetchAndRender();
   </script>
 </body>
 </html>
