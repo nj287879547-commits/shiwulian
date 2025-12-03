@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>小小生态学家：食物链观察记录系统（三行三框版）</title>
+  <title>小小生态学家：食物链观察记录系统（两行两框版）</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     *{margin:0;padding:0;box-sizing:border-box;font-family:'Arial Rounded MT Bold','Segoe UI','Microsoft YaHei',sans-serif}
@@ -116,7 +116,7 @@
       font-weight:700
     }
 
-    /* 提交区域：三行 */
+    /* 提交区域：两行 */
     .submission-area{
       border:2px solid #e5e7eb;
       border-radius:12px;
@@ -150,7 +150,7 @@
       overflow-x:auto;       /* 太长就左右滑动 */
     }
     .canvas.empty::before{
-      content:"把小动物和箭头拖到这里，或点击上面的模块添加，拼成一条“谁吃谁”的食物链";
+      content:"把小动物和箭头拖到这里，或点击上面的模块添加，拼成一条"谁吃谁"的食物链";
       color:#9ca3af;
       font-size:0.95rem;
       white-space:nowrap;
@@ -232,7 +232,7 @@ button.btn-success{background:#16a34a}
     }
     .stat-title{font-size:0.95rem;color:#4b5563}
     .stat-value{
-      font-size:1.8rem;
+      font-size:2.5rem;
       font-weight:bold;
       color:var(--primary);
       margin:6px 0
@@ -255,10 +255,23 @@ button.btn-success{background:#16a34a}
     .summary-list{
       margin-left:20px
     }
-    .summary-list li{
-      margin:4px 0;
-      font-size:1rem
-    }
+.summary-list li{
+  margin:6px 0;
+  font-size:1.2rem;
+  font-weight:bold;
+  color:#2c3e50;
+  line-height:1.4;
+  background:#fff;
+  padding:8px 12px;
+  border-radius:8px;
+  box-shadow:0 2px 4px rgba(0,0,0,0.05); /* 添加轻微阴影 */
+  transition:all 0.2s ease;
+}
+.summary-list li:hover{
+  background:#f0f7ff;        /* 悬停时改变背景色 */
+  transform:translateX(4px); /* 悬停时稍微右移 */
+  box-shadow:0 4px 8px rgba(0,0,0,0.1); /* 悬停时增加阴影 */
+}
     .no-data{
       text-align:center;
       padding:40px;
@@ -300,7 +313,7 @@ button.btn-success{background:#16a34a}
   <div class="container">
     <header>
       <h1><i class="fas fa-paw"></i> 食物链观察记录系统</h1>
-      <p class="subtitle">拖一拖、点一点，看看大家拼出了哪些“谁吃谁”的食物链</p>
+      <p class="subtitle">拖一拖、点一点，看看大家拼出了哪些"谁吃谁"的食物链</p>
     </header>
 
     <div class="tab-container">
@@ -314,13 +327,13 @@ button.btn-success{background:#16a34a}
         <h2 class="form-title"><i class="fas fa-seedling"></i> 拼一拼：谁吃谁？</h2>
         <div class="instruction">
           电脑上可以拖动模块，手机 / 平板上点击模块即可添加到某一行的黄色区域，拼出一条完整的食物链。
-          每一行都有自己的撤回、清空、提交按钮，可以写三条不同的食物链。
+          每一行都有自己的撤回、清空、提交按钮，可以写两条不同的食物链。
         </div>
 
         <!-- 模块库 -->
         <div class="palette" id="palette"></div>
 
-        <!-- 三个独立提交区域（每行一个框） -->
+        <!-- 两个独立提交区域（每行一个框） -->
         <div class="submission-area active" id="area-1">
           <h3>食物链 1</h3>
           <div class="canvas empty" id="canvas-1"></div>
@@ -361,28 +374,6 @@ button.btn-success{background:#16a34a}
             当前食物链：<span class="value" id="currentChain-2">（还没有哦）</span>
           </div>
           <div class="tip" id="submitHint-2">
-            状态：还未提交。
-          </div>
-        </div>
-
-        <div class="submission-area" id="area-3">
-          <h3>食物链 3</h3>
-          <div class="canvas empty" id="canvas-3"></div>
-          <div class="controls">
-            <button class="btn btn-secondary" id="undoBtn-3">
-              <i class="fas fa-undo"></i> 撤回
-            </button>
-            <button class="btn btn-danger" id="clearBtn-3">
-              <i class="fas fa-broom"></i> 清空
-            </button>
-            <button class="btn btn-primary" id="submitBtn-3">
-              <i class="fas fa-paper-plane"></i> 提交
-            </button>
-          </div>
-          <div class="current-chain">
-            当前食物链：<span class="value" id="currentChain-3">（还没有哦）</span>
-          </div>
-          <div class="tip" id="submitHint-3">
             状态：还未提交。
           </div>
         </div>
@@ -431,7 +422,7 @@ button.btn-success{background:#16a34a}
           <div class="no-data" id="noDataTip" style="display:none;">
             <i class="fas fa-clipboard-list" style="font-size:2.2rem;margin-bottom:10px;"></i>
             <p>还没有学生提交食物链哦～</p>
-            <p style="margin-top:8px;font-size:0.95rem;">等一等，或者提醒大家点击“提交”。</p>
+            <p style="margin-top:8px;font-size:0.95rem;">等一等，或者提醒大家点击"提交"。</p>
           </div>
         </div>
       </div>
@@ -461,7 +452,7 @@ button.btn-success{background:#16a34a}
       });
     });
 
-    /************ 3）学生端：三行三框 + 拖拽 / 点击 ************/
+    /************ 3）学生端：两行两框 + 拖拽 / 点击 ************/
     const speciesList = [
       "🌳树木","🐺狼","🦌鹿","🐍蛇","🌱青草","🐛虫子","🐸青蛙","🐰兔子","🦅老鹰"
     ];
@@ -474,8 +465,7 @@ button.btn-success{background:#16a34a}
     // 每一行自己的状态
     const areaStates = {
       1:{ hasSubmitted:false, isSubmitting:false },
-      2:{ hasSubmitted:false, isSubmitting:false },
-      3:{ hasSubmitted:false, isSubmitting:false }
+      2:{ hasSubmitted:false, isSubmitting:false }
     };
 
     // 当前激活的是哪一行（手机点击模块时用）
@@ -589,7 +579,7 @@ button.btn-success{background:#16a34a}
     // 设置激活行（手机点击模块时用）
     function setActiveCanvas(areaId){
       activeCanvasId = areaId;
-      [1,2,3].forEach(id=>{
+      [1,2].forEach(id=>{
         const areaEl = document.getElementById(`area-${id}`);
         if(id === areaId) areaEl.classList.add("active");
         else areaEl.classList.remove("active");
@@ -597,7 +587,7 @@ button.btn-success{background:#16a34a}
     }
 
     function initCanvasDragDrop(){
-      [1,2,3].forEach(areaId=>{
+      [1,2].forEach(areaId=>{
         const canvasEl = document.getElementById(`canvas-${areaId}`);
         const areaEl = document.getElementById(`area-${areaId}`);
 
@@ -659,7 +649,7 @@ button.btn-success{background:#16a34a}
     }
 
     function updateUndoButtons(){
-      [1,2,3].forEach(areaId=>{
+      [1,2].forEach(areaId=>{
         const canvasEl = document.getElementById(`canvas-${areaId}`);
         const undoBtn = document.getElementById(`undoBtn-${areaId}`);
         const clearBtn = document.getElementById(`clearBtn-${areaId}`);
@@ -681,7 +671,7 @@ button.btn-success{background:#16a34a}
   const canvasEl = document.getElementById(`canvas-${areaId}`);
   const submitHintEl = document.getElementById(`submitHint-${areaId}`);
 
-  // 按钮置灰 + 改成“已提交”绿色
+  // 按钮置灰 + 改成"已提交"绿色
   submitBtn.disabled = true;
   submitBtn.innerHTML = '<i class="fas fa-check"></i> 已提交';
   submitBtn.classList.remove('btn-primary');
@@ -849,7 +839,7 @@ button.btn-success{background:#16a34a}
     /************ 6）启动：初始化前端 ************/
     initPalette();
     initCanvasDragDrop();
-    [1,2,3].forEach(id=>{
+    [1,2].forEach(id=>{
       initAreaControls(id);
       updateCanvasEmptyState(id);
       updateCurrentChainDisplay(id);
