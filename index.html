@@ -68,11 +68,6 @@
       box-shadow: var(--shadow);
       border: 3px solid;
     }
-    .forest-title {
-      background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
-      color: #2e7d32;
-      border-color: #4caf50;
-    }
     .grassland-title {
       background: linear-gradient(135deg, #fff9c4, #fff176);
       color: #f57f17;
@@ -82,6 +77,11 @@
       background: linear-gradient(135deg, #e3f2fd, #bbdefb);
       color: #1565c0;
       border-color: #2196f3;
+    }
+    .forest-title {
+      background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
+      color: #2e7d32;
+      border-color: #4caf50;
     }
 
     .form-title{
@@ -109,9 +109,9 @@
       border-radius: 12px;
       box-shadow: var(--shadow);
     }
-    .forest-palette { background: #f1f8e9; border: 2px solid #c5e1a5; }
     .grassland-palette { background: #fffde7; border: 2px solid #fff59d; }
     .river-palette { background: #e8f5fd; border: 2px solid #90caf9; }
+    .forest-palette { background: #f1f8e9; border: 2px solid #c5e1a5; }
 
     .palette{
       display:flex;
@@ -232,6 +232,7 @@
     }
     .current-chain span.value{font-weight:bold;color:#111827}
     .tip{font-size:0.85rem;color:#6b7280;margin-top:2px}
+    .tip.warning{color:#f59e0b;font-weight:bold;}
 
     /* 教师端 */
     .teacher-controls{
@@ -302,9 +303,9 @@
       align-items: center;
       gap: 8px;
     }
-    .forest-summary { background: #e8f5e9; color: #2e7d32; border-left: 5px solid #4caf50; }
     .grassland-summary { background: #fffde7; color: #f57f17; border-left: 5px solid #ff9800; }
     .river-summary { background: #e8f5fd; color: #1565c0; border-left: 5px solid #2196f3; }
+    .forest-summary { background: #e8f5e9; color: #2e7d32; border-left: 5px solid #4caf50; }
     
     .habitat-summary-list{
       margin-left:30px;
@@ -355,6 +356,10 @@
       background:#f8d7da;
       color:#721c24
     }
+    .toast-message.warning{
+      background:#fff3cd;
+      color:#856404
+    }
     .toast-message.show{opacity:1}
 
     @media (max-width:768px){
@@ -387,61 +392,7 @@
           点击模块即可添加到某一行的黄色区域，拼出一条完整食物链。每拼出一条提交一次，每组最多提交两条。
         </div>
 
-        <!-- 森林栖息地 -->
-        <div class="habitat-title forest-title">
-          <i class="fas fa-tree"></i> 森林栖息地
-        </div>
-        <div class="habitat-palette-container forest-palette">
-          <div class="palette" id="palette-forest"></div>
-        </div>
-        
-        <div class="habitat-area">
-          <div class="submission-area active" id="area-forest-1">
-            <h3>森林食物链 1</h3>
-            <div class="canvas empty" id="canvas-forest-1"></div>
-            <div class="controls">
-              <button class="btn btn-secondary" id="undoBtn-forest-1">
-                <i class="fas fa-undo"></i> 撤回
-              </button>
-              <button class="btn btn-danger" id="clearBtn-forest-1">
-                <i class="fas fa-broom"></i> 清空
-              </button>
-              <button class="btn btn-primary" id="submitBtn-forest-1">
-                <i class="fas fa-paper-plane"></i> 提交
-              </button>
-            </div>
-            <div class="current-chain">
-              当前食物链：<span class="value" id="currentChain-forest-1">（还没有哦）</span>
-            </div>
-            <div class="tip" id="submitHint-forest-1">
-              状态：还未提交。
-            </div>
-          </div>
-
-          <div class="submission-area" id="area-forest-2">
-            <h3>森林食物链 2</h3>
-            <div class="canvas empty" id="canvas-forest-2"></div>
-            <div class="controls">
-              <button class="btn btn-secondary" id="undoBtn-forest-2">
-                <i class="fas fa-undo"></i> 撤回
-              </button>
-              <button class="btn btn-danger" id="clearBtn-forest-2">
-                <i class="fas fa-broom"></i> 清空
-              </button>
-              <button class="btn btn-primary" id="submitBtn-forest-2">
-                <i class="fas fa-paper-plane"></i> 提交
-              </button>
-            </div>
-            <div class="current-chain">
-              当前食物链：<span class="value" id="currentChain-forest-2">（还没有哦）</span>
-            </div>
-            <div class="tip" id="submitHint-forest-2">
-              状态：还未提交。
-            </div>
-          </div>
-        </div>
-
-        <!-- 草原栖息地 -->
+        <!-- 草原栖息地（调整到第一位） -->
         <div class="habitat-title grassland-title">
           <i class="fas fa-seedling"></i> 草原栖息地
         </div>
@@ -470,6 +421,9 @@
             <div class="tip" id="submitHint-grassland-1">
               状态：还未提交。
             </div>
+            <div class="tip warning" id="maxHint-grassland-1" style="display:none;">
+              最多只能添加5个生物，继续添加会替换最旧的生物
+            </div>
           </div>
 
           <div class="submission-area" id="area-grassland-2">
@@ -492,10 +446,13 @@
             <div class="tip" id="submitHint-grassland-2">
               状态：还未提交。
             </div>
+            <div class="tip warning" id="maxHint-grassland-2" style="display:none;">
+              最多只能添加5个生物，继续添加会替换最旧的生物
+            </div>
           </div>
         </div>
 
-        <!-- 河流栖息地 -->
+        <!-- 河流栖息地（调整到第二位） -->
         <div class="habitat-title river-title">
           <i class="fas fa-water"></i> 河流栖息地
         </div>
@@ -524,6 +481,9 @@
             <div class="tip" id="submitHint-river-1">
               状态：还未提交。
             </div>
+            <div class="tip warning" id="maxHint-river-1" style="display:none;">
+              最多只能添加5个生物，继续添加会替换最旧的生物
+            </div>
           </div>
 
           <div class="submission-area" id="area-river-2">
@@ -545,6 +505,69 @@
             </div>
             <div class="tip" id="submitHint-river-2">
               状态：还未提交。
+            </div>
+            <div class="tip warning" id="maxHint-river-2" style="display:none;">
+              最多只能添加5个生物，继续添加会替换最旧的生物
+            </div>
+          </div>
+        </div>
+
+        <!-- 森林栖息地（调整到最后一位） -->
+        <div class="habitat-title forest-title">
+          <i class="fas fa-tree"></i> 森林栖息地
+        </div>
+        <div class="habitat-palette-container forest-palette">
+          <div class="palette" id="palette-forest"></div>
+        </div>
+        
+        <div class="habitat-area">
+          <div class="submission-area active" id="area-forest-1">
+            <h3>森林食物链 1</h3>
+            <div class="canvas empty" id="canvas-forest-1"></div>
+            <div class="controls">
+              <button class="btn btn-secondary" id="undoBtn-forest-1">
+                <i class="fas fa-undo"></i> 撤回
+              </button>
+              <button class="btn btn-danger" id="clearBtn-forest-1">
+                <i class="fas fa-broom"></i> 清空
+              </button>
+              <button class="btn btn-primary" id="submitBtn-forest-1">
+                <i class="fas fa-paper-plane"></i> 提交
+              </button>
+            </div>
+            <div class="current-chain">
+              当前食物链：<span class="value" id="currentChain-forest-1">（还没有哦）</span>
+            </div>
+            <div class="tip" id="submitHint-forest-1">
+              状态：还未提交。
+            </div>
+            <div class="tip warning" id="maxHint-forest-1" style="display:none;">
+              最多只能添加5个生物，继续添加会替换最旧的生物
+            </div>
+          </div>
+
+          <div class="submission-area" id="area-forest-2">
+            <h3>森林食物链 2</h3>
+            <div class="canvas empty" id="canvas-forest-2"></div>
+            <div class="controls">
+              <button class="btn btn-secondary" id="undoBtn-forest-2">
+                <i class="fas fa-undo"></i> 撤回
+              </button>
+              <button class="btn btn-danger" id="clearBtn-forest-2">
+                <i class="fas fa-broom"></i> 清空
+              </button>
+              <button class="btn btn-primary" id="submitBtn-forest-2">
+                <i class="fas fa-paper-plane"></i> 提交
+              </button>
+            </div>
+            <div class="current-chain">
+              当前食物链：<span class="value" id="currentChain-forest-2">（还没有哦）</span>
+            </div>
+            <div class="tip" id="submitHint-forest-2">
+              状态：还未提交。
+            </div>
+            <div class="tip warning" id="maxHint-forest-2" style="display:none;">
+              最多只能添加5个生物，继续添加会替换最旧的生物
             </div>
           </div>
         </div>
@@ -590,14 +613,6 @@
             <i class="fas fa-list-ol"></i> 全班食物链汇总（按栖息地）
           </div>
           
-          <!-- 森林栖息地汇总 -->
-          <div id="forest-summary">
-            <div class="habitat-summary-title forest-summary">
-              <i class="fas fa-tree"></i> 森林栖息地食物链汇总
-            </div>
-            <ol class="habitat-summary-list" id="summaryList-forest"></ol>
-          </div>
-          
           <!-- 草原栖息地汇总 -->
           <div id="grassland-summary">
             <div class="habitat-summary-title grassland-summary">
@@ -612,6 +627,14 @@
               <i class="fas fa-water"></i> 河流栖息地食物链汇总
             </div>
             <ol class="habitat-summary-list" id="summaryList-river"></ol>
+          </div>
+          
+          <!-- 森林栖息地汇总 -->
+          <div id="forest-summary">
+            <div class="habitat-summary-title forest-summary">
+              <i class="fas fa-tree"></i> 森林栖息地食物链汇总
+            </div>
+            <ol class="habitat-summary-list" id="summaryList-forest"></ol>
           </div>
           
           <div class="no-data" id="noDataTip" style="display:none;">
@@ -648,11 +671,11 @@
     });
 
     /************ 3）学生端：三个栖息地，每个栖息地两个框 + 拖拽 / 点击 ************/
-    // 定义三个栖息地的物种
+    // 定义三个栖息地的物种（按新顺序）
     const speciesList = {
-      forest: ["🌳树木","🌱青草","🦌鹿","🐺狼","🐰兔子","🦊狐狸","🦅老鹰"],
       grassland: ["🌾狗尾草","🦗蝗虫","🐁田鼠","🐍蛇","🦉猫头鹰"],
-      river: ["🌿芦苇","🍃浮萍","🦐河虾","🐟小鱼","🦆水鸟","🐊鳄鱼"]
+      river: ["🌿芦苇","🍃浮萍","🦐河虾","🐟小鱼","🦆水鸟","🐊鳄鱼"],
+      forest: ["🌳树木","🌱青草","🦌鹿","🐺狼","🐰兔子","🦊狐狸","🦅老鹰"]
     };
     
     const arrowList = ["→","←"];
@@ -662,21 +685,22 @@
 
     // 每个栖息地每个框的状态管理
     const areaStates = {
-      'forest-1': { hasSubmitted: false, isSubmitting: false },
-      'forest-2': { hasSubmitted: false, isSubmitting: false },
       'grassland-1': { hasSubmitted: false, isSubmitting: false },
       'grassland-2': { hasSubmitted: false, isSubmitting: false },
       'river-1': { hasSubmitted: false, isSubmitting: false },
-      'river-2': { hasSubmitted: false, isSubmitting: false }
+      'river-2': { hasSubmitted: false, isSubmitting: false },
+      'forest-1': { hasSubmitted: false, isSubmitting: false },
+      'forest-2': { hasSubmitted: false, isSubmitting: false }
     };
 
     // 当前激活的是哪个框（手机点击模块时用）
-    let activeCanvasId = 'forest-1';
+    let activeCanvasId = 'grassland-1';
 
     function showToast(msg, type="success"){
       toastEl.textContent = msg;
-      toastEl.classList.remove("error");
+      toastEl.classList.remove("error", "warning");
       if(type==="error") toastEl.classList.add("error");
+      if(type==="warning") toastEl.classList.add("warning");
       toastEl.classList.add("show");
       setTimeout(()=>toastEl.classList.remove("show"), 1800);
     }
@@ -742,20 +766,58 @@
         showToast(`食物链已经提交过啦，不能再修改了。`,"error");
         return;
       }
+      
       const canvasEl = document.getElementById(`canvas-${areaId}`);
+      
+      // 检查当前画布中的物种数量
+      const currentSpeciesCount = getSpeciesCountInCanvas(canvasEl);
+      
+      // 如果是物种块且已经达到5个，需要移除最旧的物种
+      if(type === "species" && currentSpeciesCount >= 5){
+        // 找到第一个物种块并移除
+        const speciesBlocks = Array.from(canvasEl.children).filter(child => child.dataset.type === "species");
+        if(speciesBlocks.length > 0){
+          const firstSpecies = speciesBlocks[0];
+          canvasEl.removeChild(firstSpecies);
+          showToast("最多只能有5个生物，已移除最旧的生物", "warning");
+        }
+      }
+      
+      // 添加新块
       const node = createCanvasBlock(type, value, label);
       canvasEl.appendChild(node);
+      
+      // 更新状态
       updateCanvasEmptyState(areaId);
       updateCurrentChainDisplay(areaId);
       updateUndoButtons();
+      
+      // 显示/隐藏最多5个生物的提示
+      updateMaxSpeciesHint(areaId);
+    }
+
+    function getSpeciesCountInCanvas(canvasEl){
+      return Array.from(canvasEl.children).filter(child => child.dataset.type === "species").length;
+    }
+
+    function updateMaxSpeciesHint(areaId){
+      const canvasEl = document.getElementById(`canvas-${areaId}`);
+      const hintEl = document.getElementById(`maxHint-${areaId}`);
+      const speciesCount = getSpeciesCountInCanvas(canvasEl);
+      
+      if(speciesCount >= 4){
+        hintEl.style.display = "block";
+      } else {
+        hintEl.style.display = "none";
+      }
     }
 
     // 获取栖息地中文名
     function getHabitatName(habitat) {
       const names = {
-        'forest': '森林',
         'grassland': '草原',
-        'river': '河流'
+        'river': '河流',
+        'forest': '森林'
       };
       return names[habitat] || habitat;
     }
@@ -791,7 +853,7 @@
     }
 
     function initPalettes(){
-      // 初始化三个栖息地的模块库
+      // 初始化三个栖息地的模块库（按新顺序）
       Object.keys(speciesList).forEach(habitat => {
         const paletteEl = document.getElementById(`palette-${habitat}`);
         
@@ -812,7 +874,7 @@
       activeCanvasId = areaId;
       
       // 更新所有区域的高亮状态
-      const allAreaIds = ['forest-1', 'forest-2', 'grassland-1', 'grassland-2', 'river-1', 'river-2'];
+      const allAreaIds = ['grassland-1', 'grassland-2', 'river-1', 'river-2', 'forest-1', 'forest-2'];
       allAreaIds.forEach(id=>{
         const areaEl = document.getElementById(`area-${id}`);
         if(id === areaId) {
@@ -824,7 +886,7 @@
     }
 
     function initCanvasDragDrop(){
-      const allAreaIds = ['forest-1', 'forest-2', 'grassland-1', 'grassland-2', 'river-1', 'river-2'];
+      const allAreaIds = ['grassland-1', 'grassland-2', 'river-1', 'river-2', 'forest-1', 'forest-2'];
       
       allAreaIds.forEach(areaId=>{
         const canvasEl = document.getElementById(`canvas-${areaId}`);
@@ -875,6 +937,7 @@
         updateCanvasEmptyState(areaId);
         updateCurrentChainDisplay(areaId);
         updateUndoButtons();
+        updateMaxSpeciesHint(areaId);
       }
     }
 
@@ -885,10 +948,11 @@
       updateCanvasEmptyState(areaId);
       updateCurrentChainDisplay(areaId);
       updateUndoButtons();
+      updateMaxSpeciesHint(areaId);
     }
 
     function updateUndoButtons(){
-      const allAreaIds = ['forest-1', 'forest-2', 'grassland-1', 'grassland-2', 'river-1', 'river-2'];
+      const allAreaIds = ['grassland-1', 'grassland-2', 'river-1', 'river-2', 'forest-1', 'forest-2'];
       
       allAreaIds.forEach(areaId=>{
         const canvasEl = document.getElementById(`canvas-${areaId}`);
@@ -911,6 +975,7 @@
       const clearBtn = document.getElementById(`clearBtn-${areaId}`);
       const canvasEl = document.getElementById(`canvas-${areaId}`);
       const submitHintEl = document.getElementById(`submitHint-${areaId}`);
+      const maxHintEl = document.getElementById(`maxHint-${areaId}`);
 
       // 按钮置灰 + 改成"已提交"绿色
       submitBtn.disabled = true;
@@ -921,6 +986,7 @@
       undoBtn.disabled = true;
       clearBtn.disabled = true;
       canvasEl.classList.add("locked");
+      maxHintEl.style.display = "none";
 
       if(submitHintEl){
         submitHintEl.textContent = "状态：已提交成功，请等待老师展示全班结果。";
@@ -945,6 +1011,12 @@
       const seq = parseCanvasSpeciesSequence(areaId);
       if(seq.length < 2){
         showToast("至少要有两个生物才能算一条食物链哦～","error");
+        return;
+      }
+      
+      // 检查生物数量是否超过5个
+      if(seq.length > 5){
+        showToast("食物链最多只能有5个生物，请删除一些后再提交","error");
         return;
       }
 
@@ -999,9 +1071,9 @@
     // 按栖息地计算汇总
     function computeSummaryByHabitat(records){
       const summary = {
-        '森林': {},
         '草原': {},
-        '河流': {}
+        '河流': {},
+        '森林': {}
       };
       
       // 统计每个栖息地的食物链
@@ -1063,7 +1135,7 @@
       if (!hasData) {
         noDataTipEl.style.display = "block";
         // 隐藏所有栖息地汇总区域
-        ['森林', '草原', '河流'].forEach(habitat => {
+        ['草原', '河流', '森林'].forEach(habitat => {
           const summaryEl = document.getElementById(`summaryList-${getHabitatKey(habitat)}`);
           if (summaryEl) {
             summaryEl.innerHTML = '';
@@ -1074,7 +1146,7 @@
         noDataTipEl.style.display = "none";
       }
 
-      // 渲染每个栖息地的汇总
+      // 渲染每个栖息地的汇总（按新顺序）
       Object.keys(habitatSummary).forEach(habitat => {
         const habitatKey = getHabitatKey(habitat);
         const summaryListEl = document.getElementById(`summaryList-${habitatKey}`);
@@ -1108,9 +1180,9 @@
     // 获取栖息地的键名（英文）
     function getHabitatKey(habitatName) {
       const keys = {
-        '森林': 'forest',
         '草原': 'grassland',
-        '河流': 'river'
+        '河流': 'river',
+        '森林': 'forest'
       };
       return keys[habitatName] || habitatName;
     }
@@ -1165,20 +1237,18 @@
     initPalettes();
     initCanvasDragDrop();
     
-    // 初始化所有区域的控制和状态
-    const allAreaIds = ['forest-1', 'forest-2', 'grassland-1', 'grassland-2', 'river-1', 'river-2'];
+    // 初始化所有区域的控制和状态（按新顺序）
+    const allAreaIds = ['grassland-1', 'grassland-2', 'river-1', 'river-2', 'forest-1', 'forest-2'];
     allAreaIds.forEach(id=>{
       initAreaControls(id);
       updateCanvasEmptyState(id);
       updateCurrentChainDisplay(id);
+      updateMaxSpeciesHint(id);
     });
     
-    setActiveCanvas('forest-1');
+    setActiveCanvas('grassland-1');
     updateUndoButtons();
     fetchAndRender();
   </script>
 </body>
 </html>
-
-
-
